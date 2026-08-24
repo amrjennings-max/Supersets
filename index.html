@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>20-Minute Session Tracker</title>
+<style>
+  :root {
+    --bg: #17181b;
+    --surface: #1f2126;
+    --surface-2: #292c32;
+    --line: #383b42;
+    --text: #ece9e2;
+    --text-dim: #9a9d a3;
+    --text-dim: #94979d;
+    --accent: #c1440e;
+    --accent-soft: #c1440e33;
+    --steel: #7f9c94;
+    --steel-soft: #7f9c9433;
+    --success: #6fa47a;
+    --font-head: "Arial Narrow", "Helvetica Neue Condensed", Impact, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    margin: 0;
+    padding: 0 0 60px 0;
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+  }
+
+  h1 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-stretch: condensed;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: 1.9rem;
+    margin: 0 0 4px 0;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .plate-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 14px;
+  }
+  .plate-row .plate {
+    width: 28px;
+    height: 6px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+  .plate-row .plate.filled {
+    background: var(--accent);
+  }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px 16px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    flex: 1;
+    min-width: 100px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: var(--font-head);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+  }
+  .tab.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .tab:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .date-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .date-bar label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .date-bar input[type="date"] {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+  }
+
+  .superset {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .superset-header {
+    background: var(--surface-2);
+    padding: 10px 14px;
+    font-family: var(--font-head);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.8rem;
+    color: var(--steel);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .exercise-row {
+    padding: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .exercise-row:last-child { border-bottom: none; }
+
+  .exercise-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .slot-tag {
+    font-family: var(--font-head);
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    min-width: 26px;
+  }
+
+  select.exercise-select {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    min-width: 180px;
+  }
+
+  .weight-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .weight-field input {
+    width: 64px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 8px 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .weight-field span {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+  }
+
+  .rounds {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .round-cell {
+    text-align: center;
+  }
+  .round-cell label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+  .round-cell input {
+    width: 46px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 8px 4px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  .round-cell input.has-value {
+    border-color: var(--accent);
+  }
+
+  .target-note {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  button.primary {
+    flex: 1;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 13px;
+    border-radius: 8px;
+    font-family: var(--font-head);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button.ghost {
+    background: transparent;
+    color: var(--steel);
+    border: 1px solid var(--steel);
+    padding: 13px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--success);
+    min-height: 18px;
+    margin-bottom: 10px;
+  }
+
+  .history {
+    margin-top: 30px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+  }
+  .history h2 {
+    font-family: var(--font-head);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 1rem;
+    color: var(--steel);
+    margin: 0 0 12px 0;
+  }
+  .history-empty {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .history-item:hover { border-color: var(--steel); }
+  .history-item .h-date {
+    font-family: var(--font-head);
+    letter-spacing: 0.03em;
+  }
+  .history-item .h-meta {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+
+  .history-detail {
+    display: none;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: -4px 0 10px 0;
+    font-size: 0.85rem;
+  }
+  .history-detail.open { display: block; }
+  .history-detail div { margin-bottom: 4px; }
+  .history-detail .hd-slot { color: var(--steel); }
+
+  @media (max-width: 480px) {
+    .exercise-top { flex-direction: column; align-items: stretch; }
+    .weight-field { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>20-Minute Session Tracker</h1>
+  <p class="subtitle">Distributed compounds · non-overlapping supersets · 15–20 reps, 5–10s rest</p>
+  <div class="plate-row" id="plateRow"></div>
+</header>
+
+<main>
+  <div class="tabs" id="tabs"></div>
+
+  <div class="date-bar">
+    <label for="sessionDate">Session date</label>
+    <input type="date" id="sessionDate">
+  </div>
+
+  <div id="workoutBody"></div>
+
+  <div class="status" id="statusMsg"></div>
+
+  <div class="actions">
+    <button class="primary" id="saveBtn">Save session</button>
+    <button class="ghost" id="clearBtn">Clear form</button>
+  </div>
+
+  <div class="history">
+    <h2>Past sessions</h2>
+    <div id="historyList"></div>
+  </div>
+</main>
+
+<script>
+const ROUNDS_SHOWN = 5;
+
+const WORKOUTS = [
+  {
+    id: "w1",
+    name: "Workout 1",
+    label: "Dumbbell & Bench",
+    supersets: [
+      { name: "Superset A — Horizontal Push / Pull", slots: [
+        { tag: "A1", primary: "Close-grip push-ups", backup: "Dips / band chest press" },
+        { tag: "A2", primary: "Bent-over dumbbell rows", backup: "Single-arm DB row / band row" }
+      ]},
+      { name: "Superset B — Squat / Vertical Push", slots: [
+        { tag: "B1", primary: "Goblet squats", backup: "Bulgarian split squat / walking lunges" },
+        { tag: "B2", primary: "Dumbbell Arnold press", backup: "Landmine press / neutral-grip DB press" }
+      ]},
+      { name: "Superset C — Hip Hinge / Isolation", slots: [
+        { tag: "C1", primary: "Romanian deadlifts", backup: "Single-leg RDL / KB RDL" },
+        { tag: "C2", primary: "Dumbbell curls", backup: "Band curls", extra: "Cable chest fly (bent-to-straight)" }
+      ]}
+    ]
+  },
+  {
+    id: "w2",
+    name: "Workout 2",
+    label: "Minimal Equipment",
+    supersets: [
+      { name: "Superset A — Horizontal Push / Pull", slots: [
+        { tag: "A1", primary: "Standard push-ups", backup: "Feet-elevated push-ups / dips" },
+        { tag: "A2", primary: "Single-arm dumbbell row", backup: "Band row / inverted row" }
+      ]},
+      { name: "Superset B — Squat / Vertical Push", slots: [
+        { tag: "B1", primary: "Bulgarian split squats", backup: "Walking lunges / DB squat" },
+        { tag: "B2", primary: "Pike push-ups", backup: "Landmine press / neutral-grip DB press" }
+      ]},
+      { name: "Superset C — Hip Hinge / Isolation", slots: [
+        { tag: "C1", primary: "Single-leg RDLs", backup: "KB RDL / back extension" },
+        { tag: "C2", primary: "Dumbbell lateral raises", backup: "Band lateral raises", extra: "Cable chest fly (bent-to-straight)" }
+      ]}
+    ]
+  },
+  {
+    id: "w3",
+    name: "Workout 3",
+    label: "Barbell / Full Gym",
+    supersets: [
+      { name: "Superset A — Horizontal Push / Pull", slots: [
+        { tag: "A1", primary: "Close-grip barbell bench", backup: "Dips / push-ups" },
+        { tag: "A2", primary: "Chest-supported row", backup: "Single-arm DB row / band row" }
+      ]},
+      { name: "Superset B — Squat / Vertical Push", slots: [
+        { tag: "B1", primary: "Barbell front squat", backup: "Leg press / split squat" },
+        { tag: "B2", primary: "Landmine press", backup: "Neutral-grip DB press / cable press" }
+      ]},
+      { name: "Superset C — Hip Hinge / Isolation", slots: [
+        { tag: "C1", primary: "Barbell Romanian deadlift", backup: "Single-leg RDL / hyperextension" },
+        { tag: "C2", primary: "Curls or lateral raises", backup: "Band equivalent", extra: "Cable chest fly (bent-to-straight)" }
+      ]}
+    ]
+  }
+];
+
+let activeWorkout = WORKOUTS[0].id;
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function slotKey(tag) { return tag; }
+
+function renderTabs() {
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = "";
+  WORKOUTS.forEach(w => {
+    const btn = document.createElement("button");
+    btn.className = "tab" + (w.id === activeWorkout ? " active" : "");
+    btn.textContent = w.name;
+    btn.onclick = () => { activeWorkout = w.id; renderAll(); };
+    tabs.appendChild(btn);
+  });
+}
+
+function renderPlateRow() {
+  const row = document.getElementById("plateRow");
+  row.innerHTML = "";
+  const w = WORKOUTS.find(w => w.id === activeWorkout);
+  const totalSlots = w.supersets.reduce((n, s) => n + s.slots.length, 0);
+  let filled = 0;
+  w.supersets.forEach(s => s.slots.forEach(slot => {
+    const el = document.getElementById("weight_" + slot.tag);
+    if (el && el.value) filled++;
+  }));
+  for (let i = 0; i < totalSlots; i++) {
+    const p = document.createElement("div");
+    p.className = "plate" + (i < filled ? " filled" : "");
+    row.appendChild(p);
+  }
+}
+
+function renderWorkoutBody() {
+  const w = WORKOUTS.find(w => w.id === activeWorkout);
+  const body = document.getElementById("workoutBody");
+  body.innerHTML = "";
+
+  w.supersets.forEach(superset => {
+    const box = document.createElement("div");
+    box.className = "superset";
+
+    const head = document.createElement("div");
+    head.className = "superset-header";
+    head.textContent = superset.name;
+    box.appendChild(head);
+
+    superset.slots.forEach(slot => {
+      const row = document.createElement("div");
+      row.className = "exercise-row";
+
+      const top = document.createElement("div");
+      top.className = "exercise-top";
+
+      const tag = document.createElement("span");
+      tag.className = "slot-tag";
+      tag.textContent = slot.tag;
+
+      const select = document.createElement("select");
+      select.className = "exercise-select";
+      select.id = "exercise_" + slot.tag;
+      const optPrimary = document.createElement("option");
+      optPrimary.value = slot.primary;
+      optPrimary.textContent = slot.primary;
+      const optBackup = document.createElement("option");
+      optBackup.value = slot.backup;
+      optBackup.textContent = slot.backup + " (backup)";
+      select.appendChild(optPrimary);
+      select.appendChild(optBackup);
+      if (slot.extra) {
+        const optExtra = document.createElement("option");
+        optExtra.value = slot.extra;
+        optExtra.textContent = slot.extra;
+        select.appendChild(optExtra);
+      }
+
+      const weightField = document.createElement("div");
+      weightField.className = "weight-field";
+      const weightInput = document.createElement("input");
+      weightInput.type = "number";
+      weightInput.step = "0.5";
+      weightInput.min = "0";
+      weightInput.placeholder = "0";
+      weightInput.id = "weight_" + slot.tag;
+      weightInput.addEventListener("input", renderPlateRow);
+      const weightUnit = document.createElement("span");
+      weightUnit.textContent = "kg";
+      weightField.appendChild(weightInput);
+      weightField.appendChild(weightUnit);
+
+      top.appendChild(tag);
+      top.appendChild(select);
+      top.appendChild(weightField);
+      row.appendChild(top);
+
+      const rounds = document.createElement("div");
+      rounds.className = "rounds";
+      for (let r = 1; r <= ROUNDS_SHOWN; r++) {
+        const cell = document.createElement("div");
+        cell.className = "round-cell";
+        const label = document.createElement("label");
+        label.textContent = "R" + r;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.placeholder = "reps";
+        input.id = "reps_" + slot.tag + "_" + r;
+        input.addEventListener("input", () => {
+          input.classList.toggle("has-value", input.value !== "");
+        });
+        cell.appendChild(label);
+        cell.appendChild(input);
+        rounds.appendChild(cell);
+      }
+      row.appendChild(rounds);
+
+      const note = document.createElement("div");
+      note.className = "target-note";
+      note.textContent = "Target: 15–20 reps on Round 1, 5–10s rest before the paired exercise.";
+      row.appendChild(note);
+
+      box.appendChild(row);
+    });
+
+    body.appendChild(box);
+  });
+}
+
+function collectSessionData() {
+  const w = WORKOUTS.find(w => w.id === activeWorkout);
+  const data = { workoutId: w.id, workoutLabel: w.label, date: document.getElementById("sessionDate").value, slots: [] };
+  w.supersets.forEach(s => s.slots.forEach(slot => {
+    const exercise = document.getElementById("exercise_" + slot.tag).value;
+    const weight = document.getElementById("weight_" + slot.tag).value;
+    const reps = [];
+    for (let r = 1; r <= ROUNDS_SHOWN; r++) {
+      const v = document.getElementById("reps_" + slot.tag + "_" + r).value;
+      if (v !== "") reps.push(v);
+    }
+    if (exercise || weight || reps.length) {
+      data.slots.push({ tag: slot.tag, exercise, weight, reps });
+    }
+  }));
+  return data;
+}
+
+function saveSession() {
+  const statusEl = document.getElementById("statusMsg");
+  const data = collectSessionData();
+  if (!data.date) {
+    statusEl.style.color = "#c1440e";
+    statusEl.textContent = "Set a session date before saving.";
+    return;
+  }
+  if (data.slots.length === 0) {
+    statusEl.style.color = "#c1440e";
+    statusEl.textContent = "Log at least one weight or rep before saving.";
+    return;
+  }
+  try {
+    const key = "entry:" + data.workoutId + ":" + data.date;
+    localStorage.setItem(key, JSON.stringify(data));
+    statusEl.style.color = "#6fa47a";
+    statusEl.textContent = "Session saved for " + data.date + ".";
+    renderHistory();
+  } catch (e) {
+    statusEl.style.color = "#c1440e";
+    statusEl.textContent = "Storage error — could not save. Your browser may be blocking local storage (e.g. private/incognito mode).";
+  }
+}
+
+function clearForm() {
+  const w = WORKOUTS.find(w => w.id === activeWorkout);
+  w.supersets.forEach(s => s.slots.forEach(slot => {
+    document.getElementById("weight_" + slot.tag).value = "";
+    for (let r = 1; r <= ROUNDS_SHOWN; r++) {
+      const input = document.getElementById("reps_" + slot.tag + "_" + r);
+      input.value = "";
+      input.classList.remove("has-value");
+    }
+  }));
+  document.getElementById("statusMsg").textContent = "";
+  renderPlateRow();
+}
+
+function renderHistory() {
+  const listEl = document.getElementById("historyList");
+  listEl.innerHTML = "";
+  try {
+    const prefix = "entry:" + activeWorkout + ":";
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(prefix) === 0) keys.push(k);
+    }
+    if (keys.length === 0) {
+      listEl.innerHTML = '<div class="history-empty">No past sessions logged for this workout yet.</div>';
+      return;
+    }
+    keys.sort().reverse();
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const entry = JSON.parse(raw);
+
+      const item = document.createElement("div");
+      item.className = "history-item";
+      const dateSpan = document.createElement("span");
+      dateSpan.className = "h-date";
+      dateSpan.textContent = entry.date;
+      const metaSpan = document.createElement("span");
+      metaSpan.className = "h-meta";
+      metaSpan.textContent = entry.slots.length + " exercises logged";
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.style.cssText = "background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:6px;padding:4px 8px;font-size:0.7rem;cursor:pointer;margin-left:8px;";
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (confirm("Delete the session logged for " + entry.date + "?")) {
+          deleteEntry(key);
+        }
+      };
+
+      item.appendChild(dateSpan);
+      item.appendChild(metaSpan);
+      item.appendChild(delBtn);
+
+      const detail = document.createElement("div");
+      detail.className = "history-detail";
+      entry.slots.forEach(slot => {
+        const line = document.createElement("div");
+        const weightText = slot.weight ? slot.weight + "kg" : "—";
+        const repsText = slot.reps && slot.reps.length ? slot.reps.join(" / ") : "—";
+        line.innerHTML = '<span class="hd-slot">' + slot.tag + '</span> ' + slot.exercise + " — " + weightText + " — reps: " + repsText;
+        detail.appendChild(line);
+      });
+
+      item.onclick = () => { detail.classList.toggle("open"); };
+
+      listEl.appendChild(item);
+      listEl.appendChild(detail);
+    }
+  } catch (e) {
+    listEl.innerHTML = '<div class="history-empty">Could not load past sessions.</div>';
+  }
+}
+
+function renderAll() {
+  renderTabs();
+  renderWorkoutBody();
+  renderPlateRow();
+  renderHistory();
+}
+
+function deleteEntry(key) {
+  localStorage.removeItem(key);
+  renderHistory();
+}
+
+document.getElementById("sessionDate").value = todayStr();
+document.getElementById("saveBtn").addEventListener("click", saveSession);
+document.getElementById("clearBtn").addEventListener("click", clearForm);
+
+renderAll();
+</script>
+</body>
+</html>
