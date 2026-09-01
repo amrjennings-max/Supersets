@@ -11,12 +11,11 @@
     --surface-2: #292c32;
     --line: #383b42;
     --text: #ece9e2;
-    --text-dim: #9a9d a3;
     --text-dim: #94979d;
     --accent: #c1440e;
     --accent-soft: #c1440e33;
     --steel: #7f9c94;
-    --steel-soft: #7f9c9433;
+    --caution: #d1a13a;
     --success: #6fa47a;
     --font-head: "Arial Narrow", "Helvetica Neue Condensed", Impact, sans-serif;
     --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -74,38 +73,6 @@
     max-width: 760px;
     margin: 0 auto;
     padding: 20px 16px;
-  }
-
-  .tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-  }
-  .tab {
-    flex: 1;
-    min-width: 100px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    color: var(--text-dim);
-    padding: 10px 12px;
-    border-radius: 6px;
-    font-family: var(--font-head);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-size: 0.85rem;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s ease;
-  }
-  .tab.active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--text);
-  }
-  .tab:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
   }
 
   .date-bar {
@@ -179,7 +146,7 @@
     padding: 8px 10px;
     border-radius: 6px;
     font-size: 0.9rem;
-    min-width: 180px;
+    min-width: 200px;
   }
 
   .weight-field {
@@ -236,6 +203,11 @@
     font-size: 0.72rem;
     color: var(--text-dim);
     margin-top: 8px;
+  }
+  .caution-note {
+    font-size: 0.72rem;
+    color: var(--caution);
+    margin-top: 4px;
   }
 
   .actions {
@@ -302,6 +274,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
   }
   .history-item:hover { border-color: var(--steel); }
   .history-item .h-date {
@@ -311,6 +284,7 @@
   .history-item .h-meta {
     font-size: 0.78rem;
     color: var(--text-dim);
+    flex: 1;
   }
 
   .history-detail {
@@ -336,13 +310,11 @@
 
 <header>
   <h1>20-Minute Session Tracker</h1>
-  <p class="subtitle">Distributed compounds · non-overlapping supersets · 15–20 reps, 5–10s rest</p>
+  <p class="subtitle">Distributed compounds · non-overlapping supersets · 15–20 reps, 5–10s rest · pick exercises to match whatever kit you've got</p>
   <div class="plate-row" id="plateRow"></div>
 </header>
 
 <main>
-  <div class="tabs" id="tabs"></div>
-
   <div class="date-bar">
     <label for="sessionDate">Session date</label>
     <input type="date" id="sessionDate">
@@ -366,94 +338,93 @@
 <script>
 const ROUNDS_SHOWN = 5;
 
-const WORKOUTS = [
+// Each slot holds grouped exercise options by equipment type.
+// A = horizontal push / pull, B = squat / vertical push, C = hip hinge / isolation.
+const SUPERSETS = [
   {
-    id: "w1",
-    name: "Workout 1",
-    label: "Dumbbell & Bench",
-    supersets: [
-      { name: "Superset A — Horizontal Push / Pull", slots: [
-        { tag: "A1", primary: "Close-grip push-ups", backup: "Dips / band chest press" },
-        { tag: "A2", primary: "Bent-over dumbbell rows", backup: "Single-arm DB row / band row" }
-      ]},
-      { name: "Superset B — Squat / Vertical Push", slots: [
-        { tag: "B1", primary: "Goblet squats", backup: "Bulgarian split squat / walking lunges" },
-        { tag: "B2", primary: "Dumbbell Arnold press", backup: "Landmine press / neutral-grip DB press" }
-      ]},
-      { name: "Superset C — Hip Hinge / Isolation", slots: [
-        { tag: "C1", primary: "Romanian deadlifts", backup: "Single-leg RDL / KB RDL" },
-        { tag: "C2", primary: "Dumbbell curls", backup: "Band curls", extra: "Cable chest fly (bent-to-straight)" }
-      ]}
+    name: "Superset A — Horizontal Push / Pull",
+    slots: [
+      {
+        tag: "A1", label: "Horizontal push",
+        groups: {
+          "Bodyweight": ["Push-ups", "Feet-elevated push-ups", "Dips"],
+          "Dumbbell": ["Dumbbell bench press", "Close-grip dumbbell press"],
+          "Barbell": ["Close-grip barbell bench press", "Barbell bench press", "Smith machine bench press"],
+          "Machine / Cable": ["Chest press machine", "Cable chest press"],
+          "Band": ["Resistance-band chest press"]
+        }
+      },
+      {
+        tag: "A2", label: "Horizontal pull",
+        groups: {
+          "Bodyweight": ["Inverted row", "TRX row"],
+          "Dumbbell": ["Bent-over dumbbell row", "Single-arm dumbbell row", "Chest-supported dumbbell row"],
+          "Barbell": ["Bent-over barbell row", "Pendlay row"],
+          "Machine / Cable": ["Seated cable row", "Chest-supported row machine"],
+          "Band": ["Resistance-band row"]
+        }
+      }
     ]
   },
   {
-    id: "w2",
-    name: "Workout 2",
-    label: "Minimal Equipment",
-    supersets: [
-      { name: "Superset A — Horizontal Push / Pull", slots: [
-        { tag: "A1", primary: "Standard push-ups", backup: "Feet-elevated push-ups / dips" },
-        { tag: "A2", primary: "Single-arm dumbbell row", backup: "Band row / inverted row" }
-      ]},
-      { name: "Superset B — Squat / Vertical Push", slots: [
-        { tag: "B1", primary: "Bulgarian split squats", backup: "Walking lunges / DB squat" },
-        { tag: "B2", primary: "Pike push-ups", backup: "Landmine press / neutral-grip DB press" }
-      ]},
-      { name: "Superset C — Hip Hinge / Isolation", slots: [
-        { tag: "C1", primary: "Single-leg RDLs", backup: "KB RDL / back extension" },
-        { tag: "C2", primary: "Dumbbell lateral raises", backup: "Band lateral raises", extra: "Cable chest fly (bent-to-straight)" }
-      ]}
+    name: "Superset B — Squat / Vertical Push",
+    slots: [
+      {
+        tag: "B1", label: "Squat pattern",
+        groups: {
+          "Bodyweight": ["Bulgarian split squat (bodyweight)", "Walking lunges", "Wall sit → squat jump"],
+          "Dumbbell": ["Goblet squat", "Dumbbell squat", "Bulgarian split squat (weighted)"],
+          "Barbell": ["Barbell back squat", "Barbell front squat"],
+          "Machine": ["Leg press", "Hack squat", "Smith machine squat"]
+        }
+      },
+      {
+        tag: "B2", label: "Vertical push",
+        groups: {
+          "Shoulder-friendly first choices": ["Landmine press", "Neutral-grip dumbbell press", "Pike push-ups"],
+          "Machine / Cable": ["Cable overhead press (controlled range)", "Shoulder press machine"],
+          "Overhead (caution — flagged shoulder issue)": ["Dumbbell Arnold press", "Dumbbell overhead press", "Barbell overhead press"]
+        }
+      }
     ]
   },
   {
-    id: "w3",
-    name: "Workout 3",
-    label: "Barbell / Full Gym",
-    supersets: [
-      { name: "Superset A — Horizontal Push / Pull", slots: [
-        { tag: "A1", primary: "Close-grip barbell bench", backup: "Dips / push-ups" },
-        { tag: "A2", primary: "Chest-supported row", backup: "Single-arm DB row / band row" }
-      ]},
-      { name: "Superset B — Squat / Vertical Push", slots: [
-        { tag: "B1", primary: "Barbell front squat", backup: "Leg press / split squat" },
-        { tag: "B2", primary: "Landmine press", backup: "Neutral-grip DB press / cable press" }
-      ]},
-      { name: "Superset C — Hip Hinge / Isolation", slots: [
-        { tag: "C1", primary: "Barbell Romanian deadlift", backup: "Single-leg RDL / hyperextension" },
-        { tag: "C2", primary: "Curls or lateral raises", backup: "Band equivalent", extra: "Cable chest fly (bent-to-straight)" }
-      ]}
+    name: "Superset C — Hip Hinge / Isolation",
+    slots: [
+      {
+        tag: "C1", label: "Hip hinge",
+        groups: {
+          "Bodyweight": ["Single-leg RDL (bodyweight)", "Back extension / hyperextension", "Good mornings (bodyweight)"],
+          "Dumbbell": ["Dumbbell Romanian deadlift", "Single-leg RDL (dumbbell)"],
+          "Kettlebell": ["Kettlebell RDL", "Kettlebell swing"],
+          "Barbell": ["Barbell Romanian deadlift", "Trap bar deadlift", "Barbell good mornings"],
+          "Cable": ["Cable pull-through"]
+        }
+      },
+      {
+        tag: "C2", label: "Isolation",
+        groups: {
+          "Arms": ["Dumbbell curls", "Hammer curls", "Band curls"],
+          "Shoulders": ["Dumbbell lateral raises", "Band lateral raises", "Cable lateral raises", "Face pulls"],
+          "Chest": ["Cable chest fly (bent-to-straight)"],
+          "Triceps": ["Cable triceps pushdown"]
+        }
+      }
     ]
   }
 ];
-
-let activeWorkout = WORKOUTS[0].id;
 
 function todayStr() {
   const d = new Date();
   return d.toISOString().slice(0,10);
 }
 
-function slotKey(tag) { return tag; }
-
-function renderTabs() {
-  const tabs = document.getElementById("tabs");
-  tabs.innerHTML = "";
-  WORKOUTS.forEach(w => {
-    const btn = document.createElement("button");
-    btn.className = "tab" + (w.id === activeWorkout ? " active" : "");
-    btn.textContent = w.name;
-    btn.onclick = () => { activeWorkout = w.id; renderAll(); };
-    tabs.appendChild(btn);
-  });
-}
-
 function renderPlateRow() {
   const row = document.getElementById("plateRow");
   row.innerHTML = "";
-  const w = WORKOUTS.find(w => w.id === activeWorkout);
-  const totalSlots = w.supersets.reduce((n, s) => n + s.slots.length, 0);
+  const totalSlots = SUPERSETS.reduce((n, s) => n + s.slots.length, 0);
   let filled = 0;
-  w.supersets.forEach(s => s.slots.forEach(slot => {
+  SUPERSETS.forEach(s => s.slots.forEach(slot => {
     const el = document.getElementById("weight_" + slot.tag);
     if (el && el.value) filled++;
   }));
@@ -465,11 +436,10 @@ function renderPlateRow() {
 }
 
 function renderWorkoutBody() {
-  const w = WORKOUTS.find(w => w.id === activeWorkout);
   const body = document.getElementById("workoutBody");
   body.innerHTML = "";
 
-  w.supersets.forEach(superset => {
+  SUPERSETS.forEach(superset => {
     const box = document.createElement("div");
     box.className = "superset";
 
@@ -492,20 +462,18 @@ function renderWorkoutBody() {
       const select = document.createElement("select");
       select.className = "exercise-select";
       select.id = "exercise_" + slot.tag;
-      const optPrimary = document.createElement("option");
-      optPrimary.value = slot.primary;
-      optPrimary.textContent = slot.primary;
-      const optBackup = document.createElement("option");
-      optBackup.value = slot.backup;
-      optBackup.textContent = slot.backup + " (backup)";
-      select.appendChild(optPrimary);
-      select.appendChild(optBackup);
-      if (slot.extra) {
-        const optExtra = document.createElement("option");
-        optExtra.value = slot.extra;
-        optExtra.textContent = slot.extra;
-        select.appendChild(optExtra);
-      }
+
+      Object.keys(slot.groups).forEach(groupName => {
+        const optgroup = document.createElement("optgroup");
+        optgroup.label = groupName;
+        slot.groups[groupName].forEach(exerciseName => {
+          const opt = document.createElement("option");
+          opt.value = exerciseName;
+          opt.textContent = exerciseName;
+          optgroup.appendChild(opt);
+        });
+        select.appendChild(optgroup);
+      });
 
       const weightField = document.createElement("div");
       weightField.className = "weight-field";
@@ -552,6 +520,13 @@ function renderWorkoutBody() {
       note.textContent = "Target: 15–20 reps on Round 1, 5–10s rest before the paired exercise.";
       row.appendChild(note);
 
+      if (slot.tag === "B2") {
+        const caution = document.createElement("div");
+        caution.className = "caution-note";
+        caution.textContent = "Shoulder note: landmine press / neutral-grip press / pike push-ups are usually kinder than a straight overhead press.";
+        row.appendChild(caution);
+      }
+
       box.appendChild(row);
     });
 
@@ -560,9 +535,8 @@ function renderWorkoutBody() {
 }
 
 function collectSessionData() {
-  const w = WORKOUTS.find(w => w.id === activeWorkout);
-  const data = { workoutId: w.id, workoutLabel: w.label, date: document.getElementById("sessionDate").value, slots: [] };
-  w.supersets.forEach(s => s.slots.forEach(slot => {
+  const data = { date: document.getElementById("sessionDate").value, slots: [] };
+  SUPERSETS.forEach(s => s.slots.forEach(slot => {
     const exercise = document.getElementById("exercise_" + slot.tag).value;
     const weight = document.getElementById("weight_" + slot.tag).value;
     const reps = [];
@@ -570,7 +544,7 @@ function collectSessionData() {
       const v = document.getElementById("reps_" + slot.tag + "_" + r).value;
       if (v !== "") reps.push(v);
     }
-    if (exercise || weight || reps.length) {
+    if (weight || reps.length) {
       data.slots.push({ tag: slot.tag, exercise, weight, reps });
     }
   }));
@@ -591,7 +565,7 @@ function saveSession() {
     return;
   }
   try {
-    const key = "entry:" + data.workoutId + ":" + data.date;
+    const key = "session:" + data.date;
     localStorage.setItem(key, JSON.stringify(data));
     statusEl.style.color = "#6fa47a";
     statusEl.textContent = "Session saved for " + data.date + ".";
@@ -603,8 +577,7 @@ function saveSession() {
 }
 
 function clearForm() {
-  const w = WORKOUTS.find(w => w.id === activeWorkout);
-  w.supersets.forEach(s => s.slots.forEach(slot => {
+  SUPERSETS.forEach(s => s.slots.forEach(slot => {
     document.getElementById("weight_" + slot.tag).value = "";
     for (let r = 1; r <= ROUNDS_SHOWN; r++) {
       const input = document.getElementById("reps_" + slot.tag + "_" + r);
@@ -616,18 +589,23 @@ function clearForm() {
   renderPlateRow();
 }
 
+function deleteEntry(key) {
+  localStorage.removeItem(key);
+  renderHistory();
+}
+
 function renderHistory() {
   const listEl = document.getElementById("historyList");
   listEl.innerHTML = "";
   try {
-    const prefix = "entry:" + activeWorkout + ":";
+    const prefix = "session:";
     const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (k && k.indexOf(prefix) === 0) keys.push(k);
     }
     if (keys.length === 0) {
-      listEl.innerHTML = '<div class="history-empty">No past sessions logged for this workout yet.</div>';
+      listEl.innerHTML = '<div class="history-empty">No past sessions logged yet.</div>';
       return;
     }
     keys.sort().reverse();
@@ -680,14 +658,8 @@ function renderHistory() {
 }
 
 function renderAll() {
-  renderTabs();
   renderWorkoutBody();
   renderPlateRow();
-  renderHistory();
-}
-
-function deleteEntry(key) {
-  localStorage.removeItem(key);
   renderHistory();
 }
 
